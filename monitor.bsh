@@ -7,6 +7,9 @@ PWD=""
 MAC=""
 ADDR="192.168.0.1"
 
+GDNS1="8.8.8.8"
+GDNS2="8.8.4.4"
+
 function enable_telnet() {
     telnetenable $ADDR $MAC $USER $PWD
 }
@@ -33,17 +36,18 @@ DBG="/tmp/monitor.dbg"
 
 FILE="/tmp/monitor.last_reboot"
 
+# initialise the last rebooted file if it does not exist
 if [ ! -f $FILE ]; then
     date +%s > $FILE
 fi
 
-if ping -W 2 -n -q -c 1 8.8.8.8 > /dev/null 2>&1; then
-    echo "$(datestr) - connected to internet (8.8.8.8)" >> $DBG
+if ping -W 2 -n -q -c 1 $GDNS1 > /dev/null 2>&1; then
+    echo "$(datestr) - connected to internet ($GDNS1)" >> $DBG
 else
     sleep 2
 
-    if ping -W 2 -n -q -c 1 8.8.4.4 > /dev/null 2>&1; then
-        echo "$(datestr) - connected to internet (8.8.4.4)" >> $DBG
+    if ping -W 2 -n -q -c 1 $GDNS2 > /dev/null 2>&1; then
+        echo "$(datestr) - connected to internet ($GDNS2)" >> $DBG
     else
         echo "$(datestr) - no internet" >> $DBG
 
