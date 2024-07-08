@@ -1,0 +1,62 @@
+#!/bin/bash
+
+# monitor.bsh
+
+USER="admin"
+PWD=""
+MAC=""
+ADDR="192.168.0.1"
+
+function enable_telnet() {
+    /home/paul/bin/telnetenable $ADDR $MAC $USER $PWD
+}
+
+function reboot_router() {
+expect << EOF
+    spawn telnet $ADDR
+    expect "login"
+    send "$USER\r"
+    expect "assword"
+    send "$PWD\r"
+    expect "#"
+    send "reboot\r"
+    expect "#"
+EOF
+}
+
+function datestr() {
+    date "+%d/%m/%y %H:%M:%S"
+}
+
+LOG="/tmp/monitor.log"
+DBG="/tmp/monitor.dbg"
+
+FILE="/tmp/monitor.last_reboot"
+
+if [ ! -f $FILE ]; then
+    date +%s > $FILE
+fi
+
+if ping -W 2 -n -q -c 1 8.8.8.8 > /dev/null 2>&1; then
+    echo "$(datestr) - connected to internet (8.8.8.8)" >> $DBG
+else
+    sleep 2
+
+    if ping -W 2 -n -q -c 1 8.8.4.4 > /dev/null 2>&1; then
+        echo "$(datestr) - connected to internet (8.8.4.4)" >> $DBG
+    else
+        echo "$(datestr) - no internet" >> $DBG
+
+        LAST="`cat $FILE`"
+        NOW="`date +%s`"
+        GAP="$(($NOW - $LAST))"
+
+        # back-off time for reboot is 5 mins 
+        if [ $GAP -gt 300 ] ; then
+            date +%s > $FILE
+            echo "$(datestr) - rebooting router" >> $LOG
+            enable_telnet
+            reboot_router
+        fi
+    fi
+fi
