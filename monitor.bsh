@@ -8,7 +8,7 @@ MAC=""
 ADDR="192.168.0.1"
 
 function enable_telnet() {
-    /home/paul/bin/telnetenable $ADDR $MAC $USER $PWD
+    telnetenable $ADDR $MAC $USER $PWD
 }
 
 function reboot_router() {
